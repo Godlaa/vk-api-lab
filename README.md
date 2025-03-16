@@ -1,6 +1,8 @@
-|Сервис|	|Язык программирования|	|Какие данные обрабатываются|
-|-|--------|---|
-|VK|	|TypeScript + React|	|Посты на личной странице|
+- [x] VK
+- [x] TypeScript + React
+- [x] Посты на личной странице
+
+[API VK](https://dev.vk.com/ru/api/access-token/getting-started)
 
 ## Available Scripts
 
