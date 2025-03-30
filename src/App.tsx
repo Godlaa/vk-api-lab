@@ -131,6 +131,10 @@ function App() {
       if (token) {
         try {
           const response = await fetch(`http://localhost:5000/vkid/posts?encrypted_access_token=${encodeURIComponent(token)}`);
+          if (response.status === 401 || response.status === 500) {
+            console.error('Ошибка авторизации. Токен недействителен или отсутствует.');
+            return;
+          }
           const data = await response.json();
           setPosts(data.posts);
           console.log('Посты получены:', data.posts);

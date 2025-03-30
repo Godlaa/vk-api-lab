@@ -4,14 +4,21 @@
 
 [API VK](https://dev.vk.com/ru/api/access-token/getting-started)
 
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
+### `npm start` Frontend
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+## Server run
+
+cd .\server\
+npx tsx index.ts
+
+ngrok http 5000 Для сертификата + везде в .env подставить
+
+## Available Scripts
+
+In the project directory, you can run:
 
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
