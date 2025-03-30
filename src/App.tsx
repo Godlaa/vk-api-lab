@@ -10,6 +10,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LoginIcon from '@mui/icons-material/Login';
 import ExitToApp from '@mui/icons-material/ExitToApp';
+import EditIcon from '@mui/icons-material/Edit';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -38,6 +39,9 @@ function App() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [newPostText, setNewPostText] = useState('');
+  const [openUpdateModal, setOpenUpdateModal] = useState(false);
+  const [updatePostText, setUpdatePostText] = useState('');
+  const [updatingPostId, setUpdatingPostId] = useState<number | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -57,6 +61,51 @@ function App() {
   const handlePostTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNewPostText(event.target.value);
   };
+
+  const handleOpenUpdateModal = (post: any) => {
+    setUpdatingPostId(post.id);
+    setUpdatePostText(post.text);
+    setOpenUpdateModal(true);
+  };
+
+  const handleCloseUpdateModal = () => {
+    setOpenUpdateModal(false);
+    setUpdatePostText('');
+    setUpdatingPostId(null);
+  };
+  
+  const handleUpdatePost = () => {
+    console.log('Обновляется пост с ID:', updatingPostId, 'новым текстом:', updatePostText);
+    const token = localStorage.getItem('access_token');
+    if (!updatingPostId) {
+      console.error('Нет ID поста для обновления');
+      return;
+    }
+    fetch(`http://localhost:5000/vkid/posts/${updatingPostId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        encrypted_access_token: token,
+        message: updatePostText,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Пост обновлён:', data);
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === updatingPostId ? { ...post, text: updatePostText } : post
+          )
+        );
+      })
+      .catch((error) => {
+        console.error('Ошибка обновления поста:', error);
+      });
+    handleCloseUpdateModal();
+  };
+
 
   const handleCreatePost = () => {
     console.log('Создаётся пост с текстом:', newPostText);
@@ -187,8 +236,16 @@ function App() {
                       <img src={post.attachments[0]?.photo?.orig_photo?.url} height='500rem' width='auto' alt='Nothing'/>
                     </Typography>
                   )}
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                    <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={() => handleDeletePost(post.id)}>
+                  <Box sx={{ mt: 1 }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<EditIcon />}
+                      onClick={() => handleOpenUpdateModal(post)}
+                      sx={{ mr: 1 }}
+                    >
+                      Редактировать
+                    </Button>
+                    <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => handleDeletePost(post.id)}>
                       Удалить
                     </Button>
                   </Box>
@@ -223,6 +280,30 @@ function App() {
           </Button>
           <Button onClick={handleCreatePost} color="primary" variant="contained">
             Опубликовать
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openUpdateModal} onClose={handleCloseUpdateModal}>
+        <DialogTitle>Обновить пост</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Новый текст поста"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={updatePostText}
+            onChange={(e) => setUpdatePostText(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUpdateModal} color="secondary">
+            Отмена
+          </Button>
+          <Button onClick={handleUpdatePost} color="primary" variant="contained">
+            Сохранить
           </Button>
         </DialogActions>
       </Dialog>
