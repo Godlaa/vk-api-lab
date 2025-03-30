@@ -240,6 +240,48 @@ app.delete('/vkid/posts/:postId', async (req: Request, res: Response) => {
   }
 });
 
+app.put('/vkid/posts/:postId', async (req: Request, res: Response) => {
+  const { encrypted_access_token, message } = req.body;
+  const postId = req.params.postId;
+
+  if (!encrypted_access_token || !message || !postId) {
+    res.status(400).json({ error: 'Отсутствует encrypted_access_token, message или postId' });
+    return;
+  }
+
+  let access_token: string;
+  try {
+    const bytes = CryptoJS.AES.decrypt(encrypted_access_token, encryptionKey);
+    access_token = bytes.toString(CryptoJS.enc.Utf8);
+    if (!access_token) {
+      throw new Error('Пустой токен');
+    }
+  } catch (err) {
+    res.status(400).json({ error: 'Неверный зашифрованный access token' });
+    return;
+  }
+
+  const params = {
+    access_token,
+    v: '5.131',
+    post_id: postId,
+    message,
+  };
+
+  try {
+    const vkResponse = await axios.post('https://api.vk.com/method/wall.edit', null, { params });
+    if (vkResponse.data.error) {
+      res.status(500).json({ error: vkResponse.data.error });
+      return;
+    }
+    res.json({ result: vkResponse.data.response });
+  } catch (error: any) {
+    console.error('Ошибка обновления поста:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Ошибка при обновлении поста' });
+  }
+});
+
+
 app.listen(port, () => {
   console.log(`Сервер запущен на http://localhost:${port}`);
 });
